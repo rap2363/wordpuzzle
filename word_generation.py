@@ -1,7 +1,6 @@
 from itertools import permutations
 
 def generate_word_list(word, dictionary, min_word_length=3):    
-    word = 'raven'
     print('Generating words from {}'.format(word))
     word_set = set([])
     words_by_length = {}
@@ -15,7 +14,8 @@ def generate_word_list(word, dictionary, min_word_length=3):
                     words_by_length[i] = []
                 words_by_length[i].append(candidate)
 
-    # Now generate a word ordering by going backwards from the max_length to the min_length until we use all the words.
+    # Now generate a word ordering by going backwards from the max_length to the min_length until we
+    # use all the words.
     num_words = len(word_set)
     word_set = set([])
     word_list = []
@@ -25,7 +25,7 @@ def generate_word_list(word, dictionary, min_word_length=3):
             curr_length = max_word_length - 1
         else:
             curr_length -= 1
-        words = words_by_length[curr_length]
+        words = words_by_length.get(curr_length, [])
         for w in words:
                 if w not in word_set:
                     word_set.add(w)
