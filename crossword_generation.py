@@ -125,7 +125,7 @@ class Crossword:
 
         if best_placement is None:
             return
-        
+
         if self.horizontal:
             self.place_horizontal(word, best_placement.x - best_placement.i, best_placement.y)
         else:
@@ -133,14 +133,11 @@ class Crossword:
         print(self)
 
     def __repr__(self):
-        print(self.min_x, self.min_y, self.max_x, self.max_y)
-        print(self.word_map)
-        print(self.grid)
         s = ''
         for y in range(self.min_y - 1, self.max_y + 2):
             for x in range(self.min_x - 1, self.max_x + 2):
-                s += self.grid.get((x,y), ('-',False))[0].upper()
-            s += '\n'
+                s += ' {} '.format('.' if (x,y) not in self.grid else self.grid.get((x,y))[0].upper())
+            s += '\n\n'
 
         return s
 
