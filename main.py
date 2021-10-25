@@ -28,8 +28,8 @@ if __name__ == '__main__':
     while True:
         # Pick a random 7 letter word
         word = random.choice(words_by_length[7]).upper()
-        # Debug
-        word = "DISEASE"
+         # Debug
+        word = "PREPAID"
         word_list = word_generation.generate_word_list(word, dictionary)
 
         print(word_list)
