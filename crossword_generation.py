@@ -17,7 +17,7 @@ class Crossword:
         self.word_map = {}
 
     def place_horizontal(self, word, x, y):
-        self.word_map[word] = (x,y)
+        self.word_map[word] = (x, y, True)
         print('horizon')
         print(self.word_map[word])
         for c in word:
@@ -29,7 +29,7 @@ class Crossword:
         self.horizontal_words.append(word)
 
     def place_vertical(self, word, x, y):
-        self.word_map[word] = (x,y)
+        self.word_map[word] = (x, y, False)
         print(self.word_map[word])
         for c in word:
             self.grid[(x, y)] = (c, False)
@@ -39,9 +39,8 @@ class Crossword:
         print("y: ", self.min_y, self.max_y)
         self.vertical_words.append(word)
 
-    def get_word_indexes(self, word, horizontal):
-        x,y = self.word_map[word]
-        print('Word Indexes: {}, {},{}'.format(word, x, y))
+    def get_word_indexes(self, word):
+        x,y,horizontal = self.word_map[word]
         for _ in range(len(word)):
             yield x,y
             if horizontal:
@@ -65,16 +64,13 @@ class Crossword:
             x -= shift
         else:
             y -= shift
-        print('CALC CONV SCORE FOR {} at {},{},{}'.format(word, x, y, horizontal))
         score = 0
         for i,c in enumerate(word):
             score += -1 if not self.inside_bounds(x, y) else 0
             if (x,y) in self.grid and self.grid[(x,y)][0] != c:
-                print("DIFF CHAR {},{},{},{}".format(x, y, self.grid[(x,y)][0], c))
                 return float('-inf')
             if (x,y) in self.grid and self.grid[(x,y)] == (c,horizontal):
                 # Character must be in a different direction.
-                print("SAME DIR {},{},{},{}".format(x, y, horizontal, c))
                 return float('-inf')
             letter_matches = (x,y) in self.grid and self.grid[(x,y)][0] == c
 
@@ -85,12 +81,10 @@ class Crossword:
                 if horizontal or i == 0 or i == len(word) - 1:
                     # Check up and down.
                     if (x, y - 1) in self.grid or (x, y + 1) in self.grid:
-                        print("UP AND DOWN {},{},{}".format(x, y, c))
                         return float('-inf')
                 if not horizontal or i == 0 or i == len(word) - 1:
                     # Check left and right
                     if (x + 1, y) in self.grid or (x - 1, y) in self.grid:
-                        print("LEFT AND RIGHT {},{},{}".format(x, y, c))
                         return float('-inf')
 
             if horizontal:
@@ -113,15 +107,12 @@ class Crossword:
         Placement = namedtuple('Placement', ['x', 'y', 'i'])
         best_placement = None
         for anchor in self.vertical_words if self.horizontal else self.horizontal_words:
-            for x,y in self.get_word_indexes(anchor, horizontal=not self.horizontal):
-                print('ANCHOR:{} -{},{}'.format(anchor, x, y))
+            for x,y in self.get_word_indexes(anchor):
                 for i,c in enumerate(word):
                     score = self.calculate_convolution_score(word, shift=i, start_x=x, start_y=y, horizontal=self.horizontal)
-                    print('score: {} and placement ({}, {}, {}, {})'.format(score, x, y, i, self.horizontal))
                     if score > best_score:
                         best_score = score
                         best_placement = Placement(x, y, i)
-                        print('BestScore {} and placement: {}'.format(best_score, best_placement))
 
         if best_placement is None:
             return
@@ -137,6 +128,26 @@ class Crossword:
         for y in range(self.min_y - 1, self.max_y + 2):
             for x in range(self.min_x - 1, self.max_x + 2):
                 s += ' {} '.format('.' if (x,y) not in self.grid else self.grid.get((x,y))[0].upper())
+            s += '\n\n'
+
+        return s
+
+    def repr_with_words(self, words):
+        solved_word_points = set([])
+        for w in words:
+            if w in self.word_map:
+                for x,y in self.get_word_indexes(w):
+                    solved_word_points.add((x,y))
+                    print(x,y)
+        s = ''
+        for y in range(self.min_y - 1, self.max_y + 2):
+            for x in range(self.min_x - 1, self.max_x + 2):
+                c = '.'
+                if (x,y) in solved_word_points:
+                    c = self.grid[x,y][0].upper()
+                elif (x,y) in self.grid:
+                    c = '?'
+                s += ' {} '.format(c)
             s += '\n\n'
 
         return s
