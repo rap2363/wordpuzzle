@@ -33,7 +33,6 @@ class Crossword:
 
     def place_vertical(self, word, x, y):
         self.word_map[word] = (x, y, Direction.VERTICAL)
-        print(self.word_map[word])
         for c in word:
             direction = Direction.BOTH if (x,y) in self.grid else Direction.VERTICAL
             self.grid[(x, y)] = (c, direction)
@@ -69,7 +68,6 @@ class Crossword:
             y -= shift
         score = 0
         for i,c in enumerate(word):
-            print('checking {} at {},{}'.format(c, x, y))
             score += -1 if not self.inside_bounds(x, y) else 0
             if (x,y) in self.grid and self.grid[(x,y)][0] != c:
                 return float('-inf')
@@ -111,40 +109,34 @@ class Crossword:
         return score
 
     def add_word(self, word):
-        print('dir {}'.format(self.horizontal))
         if len(self.grid) == 0:
             # First word, place it into the grid at the origin horizontally.
             self.place_horizontal(word, x=0, y=0)
             self.horizontal = not self.horizontal
-            return
+            return 0
 
         # Otherwise, we loop through our existing set of words to figure out where we can place the
         # new one.
         best_score = float('-inf')
         Placement = namedtuple('Placement', ['x', 'y', 'i'])
         best_placement = None
-        print('PLACING {} {}'.format(word, 'H' if self.horizontal else 'V'))
         for anchor in self.vertical_words if self.horizontal else self.horizontal_words:
-            print('ANCHOR: {}'.format(anchor))
             for x,y in self.get_word_indexes(anchor):
-                print("Anchor {},{}".format(x,y))
                 for i,c in enumerate(word):
                     score = self.calculate_convolution_score(word, shift=i, start_x=x, start_y=y, direction=Direction.HORIZONTAL if self.horizontal else Direction.VERTICAL)
-                    print(i, c, score)
                     if score > best_score:
                         best_score = score
                         best_placement = Placement(x, y, i)
-                        print('score + placement: {},({},{},{})'.format(best_score, best_placement.x, best_placement.y, best_placement.i))
 
         if best_placement is None:
-            return
+            return 0
 
         if self.horizontal:
             self.place_horizontal(word, best_placement.x - best_placement.i, best_placement.y)
         else:
             self.place_vertical(word, best_placement.x, best_placement.y - best_placement.i)
         self.horizontal = not self.horizontal
-        print(self)
+        return best_score
 
     def __repr__(self):
         s = ''
@@ -177,9 +169,10 @@ class Crossword:
 def generate_crossword(word_list, max_words=10):
     crossword = Crossword()
     i = 0
+    score = 0
     for word in word_list:
         i += 1
-        crossword.add_word(word)
+        score += crossword.add_word(word)
         if i > max_words:
             break
-    return crossword
+    return crossword, score

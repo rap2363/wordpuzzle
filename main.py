@@ -23,24 +23,32 @@ def encode_dictionary_as_set(filename):
     return word_set, words_by_length
 
 if __name__ == '__main__':
-    dictionary, words_by_length = encode_dictionary_as_set('small_words.txt')
-
+    dictionary, words_by_length = encode_dictionary_as_set('words_50k.txt')
+    min_score = 8
     while True:
-        # Pick a random 7 letter word
-        word = random.choice(words_by_length[7]).upper()
+        # Pick a random 6 or 7 letter word
+        print(len(words_by_length[7] + words_by_length[6]))
+        word = random.choice(words_by_length[7] + words_by_length[6]).upper()
         # Debug
-        # word = "PREPAID"
+        #word = "SCORNED"
         word_list = word_generation.generate_word_list(word, dictionary)
 
-        print(word_list)
 
-        crossword = crossword_generation.generate_crossword(word_list)
+        crossword, score = crossword_generation.generate_crossword(word_list)
+        if score < min_score:
+            print(score)
+            continue
+        #print(word_list)
+        print('SCORE: ' + str(score))
         puzzle = Puzzle(crossword, word)
 
         # Main Loop
         while not puzzle.is_solved():
             print(puzzle)
             word = input().upper()
+            if word == '/':
+                # Give up
+                break
             if not is_valid(word):
                 print("Invalid Input! {}".format(word))
             else:
